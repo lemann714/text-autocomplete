@@ -11,13 +11,11 @@ from typing import List, Tuple
 from torch.nn.utils.rnn import pad_sequence
 
 
-CSV_PATH = "./data/training.1600000.processed.noemoticon.csv"
+CSV_PATH = "../data/training.1600000.processed.noemoticon.csv"
 URL_RE      = re.compile(r'https?://\S+|www\.\S+', flags=re.IGNORECASE)
 MENTION_RE  = re.compile(r'@\w+')
 HASHTAG_RE  = re.compile(r'#(\w+)')
 NUM_WORKERS = 0
-COMPARISON_DS_SIZE = 100 # количество записей из датасета для сравнения трансформера и lstm
-MAX_GEN_LEN = 20
 
 
 def read_dataset(csv_path: str,

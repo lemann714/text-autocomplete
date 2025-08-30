@@ -1,22 +1,14 @@
-import os, re
+import os
 import torch
 
 from transformers import AutoTokenizer
-from rouge_score import rouge_scorer
 
 from data_utils import make_val_loader
 from train_lstm import evaluate_on_loader
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-CSV_PATH = "./data/training.1600000.processed.noemoticon.csv"
-ROUGE = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
-URL_RE      = re.compile(r'https?://\S+|www\.\S+', flags=re.IGNORECASE)
-MENTION_RE  = re.compile(r'@\w+')
-HASHTAG_RE  = re.compile(r'#(\w+)')
-NUM_WORKERS = 0
 COMPARISON_DS_SIZE = 100 # количество записей из датасета для сравнения трансформера и lstm
-MAX_GEN_LEN = 20
 
 
 def inference_lstm(*,
@@ -27,7 +19,7 @@ def inference_lstm(*,
                    top_p: float = 0.9):
     
     device = torch.device("cpu")
-    best_lstm_path = "./models/best_models/full_final_model.pt"
+    best_lstm_path = "../models/best_models/full_final_model.pt"
     model = torch.load(best_lstm_path, map_location=device)
     model.eval()
 

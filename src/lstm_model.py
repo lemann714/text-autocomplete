@@ -10,13 +10,6 @@ from rouge_score import rouge_scorer
 from common import top_p_filtering
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-CSV_PATH = "./data/training.1600000.processed.noemoticon.csv"
-ROUGE = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
-URL_RE      = re.compile(r'https?://\S+|www\.\S+', flags=re.IGNORECASE)
-MENTION_RE  = re.compile(r'@\w+')
-HASHTAG_RE  = re.compile(r'#(\w+)')
-NUM_WORKERS = 0
-COMPARISON_DS_SIZE = 100 # количество записей из датасета для сравнения трансформера и lstm
 MAX_GEN_LEN = 20
 
 class LSTMWordGenerator(nn.Module):
@@ -73,6 +66,88 @@ class LSTMWordGenerator(nn.Module):
             loss_fn = nn.CrossEntropyLoss(ignore_index=-100)
             loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
             return {'logits': logits, 'loss': loss}
+
+    @torch.no_grad()
+    def generate_one_word(self, 
+                            text_prompt: str, 
+                            tokenizer: AutoTokenizer, 
+                            eos_id: int | None = None) -> str:
+        """
+        Генерирует одно слово после заданного текстового префикса
+        """
+        device = next(self.parameters()).device
+        self.eval()
+
+        # Токенизируем текст и получаем IDs
+        inputs = tokenizer(text_prompt, return_tensors="pt").to(device)
+        input_ids = inputs["input_ids"].to(device)
+        attention_mask = inputs.get("attention_mask", None)
+
+        # Выполняем прямой проход через модель
+        outputs = self.forward(input_ids=input_ids, attention_mask=attention_mask)
+        logits = outputs["logits"][:, -1, :]  # Берем последние токены
+
+        # Предсказываем следующий токен
+        next_token = torch.argmax(logits, dim=-1)[0].item()
+
+        # Преобразуем токен обратно в текст
+        word = tokenizer.decode([next_token])
+        return word
+
+    @torch.no_grad()
+    def generate_n_words(self, 
+                            text_prompt: str, 
+                            n: int, 
+                            tokenizer: AutoTokenizer, 
+                            eos_id: int | None = None, 
+                            do_sampling: bool = False, 
+                            temperature: float = 1.0, 
+                            top_p: float = 0.9) -> str:
+        """
+        Генерирует N новых слов после заданного текстового префикса.
+        """
+        device = next(self.parameters()).device
+        self.eval()
+
+        # Токенизируем входной текст
+        inputs = tokenizer(text_prompt, return_tensors="pt").to(device)
+        input_ids = inputs["input_ids"].to(device)
+        attention_mask = inputs.get("attention_mask", None)
+
+        # Начальные токены
+        current_ids = input_ids
+
+        with torch.no_grad():
+            for _ in range(n):
+                # Создаем внимание на всю длину текущих токенов
+                att_mask = torch.ones_like(current_ids, device=device)
+
+                # Прогоняем через модель
+                outputs = self.forward(input_ids=current_ids, attention_mask=att_mask)
+                logits = outputs["logits"][:, -1, :]  # Последние токены
+
+                if do_sampling:
+                    # Применяем температуру
+                    logits /= max(temperature, 1e-8)
+
+                    # Отсекаем редкие токены по Top-P
+                    filtered_probs = F.softmax(top_p_filtering(logits.squeeze(), top_p=top_p), dim=-1)
+                    next_token = torch.multinomial(filtered_probs, num_samples=1).unsqueeze(0)
+                else:
+                    # Просто выбираем самый вероятный токен
+                    next_token = torch.argmax(logits, dim=-1, keepdim=True)
+
+                # Добавляем токен в последовательность
+                current_ids = torch.cat((current_ids, next_token), dim=1)
+
+                # Проверка на достижение символа конца строки
+                if eos_id is not None and next_token.item() == eos_id:
+                    break
+
+        # Переводим токены обратно в текст
+        result_text = tokenizer.decode(current_ids.squeeze().tolist())
+        return result_text[len(text_prompt):].strip()  # Убираем оригинальный текст и лишние пробелы
+
 
     def generate_one_sample(self,
                             prompt_ids: List[int],
@@ -133,11 +208,11 @@ class LSTMWordGenerator(nn.Module):
         Берет полезную часть (до паддинга)
         На выходе декодированный текст
         '''
-        # Обрезаем сгенерированный токен-список до EOS (если он есть) ----
+        # Обрезаем сгенерированный токен-список до EOS (если он есть)
         if eos_id in gen_ids:
             gen_ids = gen_ids[:gen_ids.index(eos_id)]
 
-        # Декодируем оба текста ----
+        # Декодируем оба текста
         gen_words = tokenizer.decode(gen_ids, skip_special_tokens=True)
         return gen_words
     

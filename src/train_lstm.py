@@ -14,7 +14,6 @@ from datasets import (
     concatenate_datasets,          
 )
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from rouge_score import rouge_scorer
 from data_utils import token_collate_fn, TweetDataset, split_hf_dataset, read_dataset
 from lstm_model import LSTMWordGenerator
 from common import rouge_l_f1, set_seed
@@ -23,15 +22,10 @@ from inference_transformer import TOKENIZER, EOS_ID
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-CSV_PATH = "./data/training.1600000.processed.noemoticon.csv"
-ROUGE = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
-URL_RE      = re.compile(r'https?://\S+|www\.\S+', flags=re.IGNORECASE)
-MENTION_RE  = re.compile(r'@\w+')
-HASHTAG_RE  = re.compile(r'#(\w+)')
+CSV_PATH = "../data/training.1600000.processed.noemoticon.csv"
 NUM_WORKERS = 0
-COMPARISON_DS_SIZE = 100 # количество записей из датасета для сравнения трансформера и lstm
 MAX_GEN_LEN = 20
-
+RESULT_DIR = "../models"
 
 def complete_text(
     prompt_ids: List[int],
@@ -539,7 +533,7 @@ def train_lstm(tokenizer: AutoTokenizer,
         tokenizer=tokenizer,
         device=device,
         eos_id=eos_id,
-        results_dir="models",
+        results_dir=RESULT_DIR,
     )
 
     # Находим лучшую конфигурацию (по тестовому ROUGE-L)
@@ -553,7 +547,7 @@ def train_lstm(tokenizer: AutoTokenizer,
                               tokenizer=tokenizer,
                               device=device,
                               eos_id=eos_id,
-                              results_dir='models')
+                              results_dir=RESULT_DIR)
     return final_model
 
 

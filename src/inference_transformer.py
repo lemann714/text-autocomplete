@@ -9,13 +9,7 @@ from data_utils import make_val_loader
 from common import rouge_l_f1, get_eos_id
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-CSV_PATH = "./data/training.1600000.processed.noemoticon.csv"
-URL_RE      = re.compile(r'https?://\S+|www\.\S+', flags=re.IGNORECASE)
-MENTION_RE  = re.compile(r'@\w+')
-HASHTAG_RE  = re.compile(r'#(\w+)')
-NUM_WORKERS = 0
 COMPARISON_DS_SIZE = 100 # количество записей из датасета для сравнения трансформера и lstm
-MAX_GEN_LEN = 20
 TRANSFORMER_NAME = "distilgpt2"
 
 TOKENIZER = AutoTokenizer.from_pretrained(TRANSFORMER_NAME)
