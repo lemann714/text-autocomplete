@@ -1,0 +1,2 @@
+lr,embed_dim,hidden_dim,num_layers,bidirectional,batch_size,epochs,final_train_loss,final_val_perplexity,final_val_rougeL,test_perplexity,test_rougeL,best_model_path
+0.0005,128,128,1,False,16,4,38.8595151134491,12.124361808219698,0.054357402806621886,12.301658993656346,0.05546096346344516,grid_search_results/best_models/run_001_best.pt
