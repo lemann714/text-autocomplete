@@ -1,6 +1,8 @@
 from inference_lstm import inference_lstm
 from inference_transformer import inference_transformer, TOKENIZER, EOS_ID, TRANSFORMER_NAME
 
+SHOW_TEXT_LEN = 5
+
 if __name__=="__main__":
     # Жадная генерация
     mean_rouge_lstm_greedy, lstm_greedy_texts = inference_lstm(
@@ -38,21 +40,21 @@ if __name__=="__main__":
     print(f'{mean_rouge_transformer_sampling=}')
 
     print('LSTM с семплированием:')
-    for j in range(5):
+    for j in range(SHOW_TEXT_LEN):
         print(f'PROMT: {lstm_sampling_texts[j]["prompt"]}')
         print(f'PREDICTION: {lstm_sampling_texts[j]["prediction"]}\n')
 
     print('TRANSFORMER с семплированием:')
-    for j in range(5):
+    for j in range(SHOW_TEXT_LEN):
         print(f'PROMT: {transformer_sampling_texts[j]["prompt"]}')
         print(f'PREDICTION: {transformer_sampling_texts[j]["prediction"]}\n')
 
     print('LSTM жадная генерация:')
-    for i in range(5):
+    for i in range(SHOW_TEXT_LEN):
         print(f'PROMT: {lstm_greedy_texts[i]["prompt"]}')
         print(f'PREDICTION: {lstm_greedy_texts[i]["prediction"]}\n')
 
     print('TRANSFORMER жадная генерация:')
-    for i in range(5):
+    for i in range(SHOW_TEXT_LEN):
         print(f'PROMT: {transformer_greedy_texts[i]["prompt"]}')
         print(f'PREDICTION: {transformer_greedy_texts[i]["prediction"]}\n')

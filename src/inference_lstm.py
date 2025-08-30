@@ -5,7 +5,7 @@ from transformers import AutoTokenizer
 
 from data_utils import make_val_loader
 from train_lstm import evaluate_on_loader
-
+from lstm_model import LSTMWordGenerator
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 COMPARISON_DS_SIZE = 100 # количество записей из датасета для сравнения трансформера и lstm
@@ -18,9 +18,18 @@ def inference_lstm(*,
                    temperature: float = 1.0,
                    top_p: float = 0.9):
     
-    device = torch.device("cpu")
-    best_lstm_path = "../models/best_models/full_final_model.pt"
-    model = torch.load(best_lstm_path, map_location=device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # best_lstm_path = "../models/best_models/full_final_model.pt"
+    # model = torch.load(best_lstm_path, map_location=device)
+    vocab_size = tokenizer.vocab_size
+    model = LSTMWordGenerator(
+        vocab_size=vocab_size,
+        embed_dim=128,
+        hidden_dim=128,
+        num_layers=1,
+        bidirectional=False).to(device)
+    best_model_path = "../models/best_models/final_model.pt"
+    model.load_state_dict(torch.load(best_model_path, map_location=device))
     model.eval()
 
     # Формируем DataLoader для validation-части.

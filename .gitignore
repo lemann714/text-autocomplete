@@ -3,3 +3,4 @@ sentiment140_raw
 sp2proj
 data/fulldata.csv
 theory.md
+src/__pycache__
