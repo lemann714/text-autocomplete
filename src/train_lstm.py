@@ -165,7 +165,6 @@ def grid_search(
         embed_dim   = cfg["embed_dim"]
         hidden_dim  = cfg["hidden_dim"]
         num_layers  = cfg["num_layers"]
-        bidirectional = cfg["bidirectional"]
         batch_size  = cfg["batch_size"]
         epochs      = cfg["epochs"]
 
@@ -201,7 +200,6 @@ def grid_search(
             embed_dim=embed_dim,
             hidden_dim=hidden_dim,
             num_layers=num_layers,
-            bidirectional=bidirectional,
         ).to(device)
 
         best_path = os.path.join(
@@ -423,8 +421,7 @@ def train_final(best_cfg: dict,
         vocab_size=vocab_size,
         embed_dim=best_cfg["embed_dim"],
         hidden_dim=best_cfg["hidden_dim"],
-        num_layers=best_cfg["num_layers"],
-        bidirectional=best_cfg["bidirectional"]).to(device)
+        num_layers=best_cfg["num_layers"]).to(device)
     
     # обучаем с использованием early-stopping для защиты от переобучения
     # но теперь мониторим ROUGE-L на 10% от полной выборки
@@ -473,7 +470,6 @@ def train_lstm(tokenizer: AutoTokenizer,
         "embed_dim":   [128],
         "hidden_dim":  [128],
         "num_layers":  [1],
-        "bidirectional": [False],
         "batch_size":  [16],            
         "epochs":      [4],
     }

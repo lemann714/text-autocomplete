@@ -26,8 +26,7 @@ def inference_lstm(*,
         vocab_size=vocab_size,
         embed_dim=128,
         hidden_dim=128,
-        num_layers=1,
-        bidirectional=False).to(device)
+        num_layers=1).to(device)
     best_model_path = "../models/best_models/final_model.pt"
     model.load_state_dict(torch.load(best_model_path, map_location=device))
     model.eval()

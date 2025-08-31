@@ -21,8 +21,7 @@ class LSTMWordGenerator(nn.Module):
                  vocab_size: int,
                  embed_dim: int = 256,
                  hidden_dim: int = 512,
-                 num_layers: int = 2,
-                 bidirectional: bool = True):
+                 num_layers: int = 2):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=0)
         self.lstm = nn.LSTM(
@@ -30,9 +29,8 @@ class LSTMWordGenerator(nn.Module):
             hidden_size=hidden_dim,
             num_layers=num_layers,
             batch_first=True,
-            bidirectional=bidirectional
         )
-        lstm_out_dim = hidden_dim * (2 if bidirectional else 1)
+        lstm_out_dim = hidden_dim
         self.fc = nn.Linear(lstm_out_dim, vocab_size)
 
     def forward(self,
